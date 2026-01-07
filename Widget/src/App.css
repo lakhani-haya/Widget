@@ -33,3 +33,38 @@ body,
   font-size: 2rem;
   letter-spacing: 0.04em;
 }
+
+.widget-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #0d1117;
+}
+
+.widget-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #121820 0%, #0d1117 100%);
+  user-select: none;
+  cursor: move;
+}
+
+.widget-title {
+  font-size: 0.95rem;
+  color: #e6edf3;
+}
+
+.widget-body {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-content h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
