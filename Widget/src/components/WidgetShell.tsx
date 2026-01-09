@@ -1,5 +1,5 @@
 import { PropsWithChildren } from "react";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 type WidgetShellProps = PropsWithChildren<{
   title: string;
@@ -7,7 +7,7 @@ type WidgetShellProps = PropsWithChildren<{
 
 function WidgetShell({ title, children }: WidgetShellProps) {
   const handleDrag = () => {
-    appWindow.startDragging().catch(() => {});
+    getCurrentWindow().startDragging().catch(() => {});
   };
 
   return (
