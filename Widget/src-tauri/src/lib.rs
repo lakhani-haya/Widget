@@ -37,8 +37,14 @@ fn open_widget_window(
     let x = params.x.unwrap_or(100.0);
     let y = params.y.unwrap_or(100.0);
 
+    let window_title = match params.widget_type.as_str() {
+        "clock" => "Clock",
+        "notes" => "Notes",
+        _ => "Widget",
+    };
+
     tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
-        .title(&label)
+        .title(window_title)
         .inner_size(width, height)
         .position(x, y)
         .decorations(false)
