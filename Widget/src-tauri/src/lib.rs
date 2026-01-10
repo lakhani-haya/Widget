@@ -1,6 +1,6 @@
 use tauri::Manager;
 use tauri::menu::{Menu, MenuItem};
-use tauri::tray::{TrayIconBuilder, MouseButton, MouseButtonState};
+use tauri::tray::TrayIconBuilder;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
