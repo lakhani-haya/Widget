@@ -23,11 +23,11 @@ const mountMarkerStyle: React.CSSProperties = {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <DevRuntimeOverlay />
-    {import.meta.env.DEV && (
-      <div style={mountMarkerStyle}>App mounted</div>
-    )}
     <HashRouter>
+      <DevRuntimeOverlay />
+      {import.meta.env.DEV && (
+        <div style={mountMarkerStyle}>App mounted</div>
+      )}
       <App />
     </HashRouter>
   </React.StrictMode>,
