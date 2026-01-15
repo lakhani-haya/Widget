@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import ClockWidget from "../widgets/ClockWidget";
 import NotesWidget from "../widgets/NotesWidget";
@@ -7,9 +7,13 @@ import NotesWidget from "../widgets/NotesWidget";
 function HostScreen() {
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    console.log("HostScreen mounted");
+  }, []);
+
   const handleOpenClock = async () => {
     console.log("Open Clock Widget clicked");
-    const id = crypto.randomUUID();
+    const id = crypto.randomUUID().trim();
     try {
       await invoke("open_widget_window", {
         params: {
@@ -31,7 +35,7 @@ function HostScreen() {
 
   const handleOpenNotes = async () => {
     console.log("Open Notes Widget clicked");
-    const id = crypto.randomUUID();
+    const id = crypto.randomUUID().trim();
     try {
       await invoke("open_widget_window", {
         params: {
@@ -68,11 +72,18 @@ function HostScreen() {
 }
 
 function AppRouter() {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log("Route changed to:", location.pathname, location.hash);
+  }, [location]);
+
   return (
     <Routes>
       <Route path="/" element={<HostScreen />} />
       <Route path="/widget/clock" element={<ClockWidget />} />
       <Route path="/widget/notes" element={<NotesWidget />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

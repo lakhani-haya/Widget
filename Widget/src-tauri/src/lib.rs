@@ -23,14 +23,20 @@ fn open_widget_window(
     app: tauri::AppHandle,
     params: OpenWidgetParams,
 ) -> Result<(), String> {
-    let label = format!("widget-{}", params.id);
+    let id = params.id.trim();
+    let label = format!("widget-{}", id);
     
     if let Some(window) = app.get_webview_window(&label) {
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
 
-    let url = format!("/#/widget/{}?id={}", params.widget_type, params.id);
+    let url = if cfg!(debug_assertions) {
+        let base = "http://localhost:1420";
+        format!("{}/#/widget/{}?id={}", base, params.widget_type, id)
+    } else {
+        format!("/#/widget/{}?id={}", params.widget_type, id)
+    };
     let width = params.width.unwrap_or(360.0);
     let height = params.height.unwrap_or(220.0);
     
@@ -43,7 +49,15 @@ fn open_widget_window(
         _ => "Widget",
     };
 
-    tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url.into()))
+    println!("OPENING WIDGET label={} url={}", label, url);
+
+    let webview_url = if cfg!(debug_assertions) {
+        tauri::WebviewUrl::External(url.parse::<tauri::Url>().map_err(|e| e.to_string())?)
+    } else {
+        tauri::WebviewUrl::App(url.clone().into())
+    };
+
+    let mut builder = tauri::WebviewWindowBuilder::new(&app, &label, webview_url)
         .title(window_title)
         .inner_size(width, height)
         .position(x, y)
@@ -51,7 +65,9 @@ fn open_widget_window(
         .resizable(true)
         .skip_taskbar(true)
         .always_on_top(false)
-        .transparent(true)
+        .transparent(false);
+
+    let _window = builder
         .build()
         .map_err(|e| e.to_string())?;
 
