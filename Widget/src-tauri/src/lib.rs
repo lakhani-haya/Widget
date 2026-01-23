@@ -31,12 +31,8 @@ fn open_widget_window(
         return Ok(());
     }
 
-    let url = if cfg!(debug_assertions) {
-        let base = "http://localhost:1420";
-        format!("{}/#/widget/{}?id={}", base, params.widget_type, id)
-    } else {
-        format!("/#/widget/{}?id={}", params.widget_type, id)
-    };
+    let url = format!("/#/widget/{}?id={}", params.widget_type, id);
+    
     let width = params.width.unwrap_or(360.0);
     let height = params.height.unwrap_or(220.0);
     
@@ -51,17 +47,7 @@ fn open_widget_window(
 
     println!("OPENING WIDGET label={} url={}", label, url);
 
-    let webview_url = if cfg!(debug_assertions) {
-        match tauri::Url::parse(&url) {
-            Ok(parsed_url) => tauri::WebviewUrl::External(parsed_url),
-            Err(e) => {
-                eprintln!("Failed to parse URL: {}", e);
-                return Err(format!("URL parse error: {}", e));
-            }
-        }
-    } else {
-        tauri::WebviewUrl::App(url.clone().into())
-    };
+    let webview_url = tauri::WebviewUrl::App(url.into());
 
     let _window = tauri::WebviewWindowBuilder::new(&app, &label, webview_url)
         .title(window_title)
