@@ -52,7 +52,13 @@ fn open_widget_window(
     println!("OPENING WIDGET label={} url={}", label, url);
 
     let webview_url = if cfg!(debug_assertions) {
-        tauri::WebviewUrl::External(url.parse::<tauri::Url>().map_err(|e| e.to_string())?)
+        match tauri::Url::parse(&url) {
+            Ok(parsed_url) => tauri::WebviewUrl::External(parsed_url),
+            Err(e) => {
+                eprintln!("Failed to parse URL: {}", e);
+                return Err(format!("URL parse error: {}", e));
+            }
+        }
     } else {
         tauri::WebviewUrl::App(url.clone().into())
     };
