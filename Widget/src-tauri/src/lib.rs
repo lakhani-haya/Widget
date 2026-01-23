@@ -57,7 +57,7 @@ fn open_widget_window(
         tauri::WebviewUrl::App(url.clone().into())
     };
 
-    let mut builder = tauri::WebviewWindowBuilder::new(&app, &label, webview_url)
+    let _window = tauri::WebviewWindowBuilder::new(&app, &label, webview_url)
         .title(window_title)
         .inner_size(width, height)
         .position(x, y)
@@ -65,9 +65,7 @@ fn open_widget_window(
         .resizable(true)
         .skip_taskbar(true)
         .always_on_top(false)
-        .transparent(false);
-
-    let _window = builder
+        .transparent(false)
         .build()
         .map_err(|e| e.to_string())?;
 
