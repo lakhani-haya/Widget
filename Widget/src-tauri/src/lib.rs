@@ -64,8 +64,6 @@ fn open_widget_window(
         .decorations(false)
         .resizable(true)
         .skip_taskbar(true)
-        .always_on_top(false)
-        .transparent(false)
         .build()
         .map_err(|e| e.to_string())?;
 
