@@ -14,18 +14,12 @@
       {
         "title": "widget",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "url": "http://localhost:1420"
       }
     ],
     "security": {
-      "csp": null,
-      "dangerousRemoteDomainIpcAccess": [
-        {
-          "domain": "localhost",
-          "windows": ["main"],
-          "enableTauriAPI": true
-        }
-      ]
+      "csp": null
     }
   },
   "bundle": {
