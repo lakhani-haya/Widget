@@ -45,15 +45,16 @@ fn open_widget_window(
 
     let hash_path = format!("/#/widget/{}?id={}", params.widget_type, id);
 
-    println!("OPENING WIDGET label={} hash={}", label, hash_path);
+    let (url, webview_url) = if cfg!(debug_assertions) {
+        let full = format!("http://127.0.0.1:1420{}", hash_path);
+        let parsed = tauri::Url::parse(&full).map_err(|e| format!("URL parse error: {}", e))?;
+        (full, tauri::WebviewUrl::External(parsed))
+    } else {
+        let rel = hash_path.clone();
+        (rel.clone(), tauri::WebviewUrl::App(rel.into()))
+    };
 
-    #[cfg(debug_assertions)]
-    let base_url = "http://localhost:1420";
-    
-    #[cfg(not(debug_assertions))]
-    let base_url = "/";
-
-    let webview_url = tauri::WebviewUrl::App(hash_path.into());
+    println!("OPENING WIDGET label={} url={}", label, url);
 
     let window = tauri::WebviewWindowBuilder::new(&app, &label, webview_url)
         .title(window_title)
@@ -64,13 +65,6 @@ fn open_widget_window(
         .skip_taskbar(true)
         .build()
         .map_err(|e| e.to_string())?;
-
-    #[cfg(debug_assertions)]
-    {
-        let full_url = format!("{}{}", base_url, hash_path);
-        let js = format!(r#"window.location.href = "{}";"#, full_url);
-        window.eval(&js).map_err(|e| e.to_string())?;
-    }
 
     Ok(())
 }
