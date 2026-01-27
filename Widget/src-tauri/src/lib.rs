@@ -43,28 +43,18 @@ fn open_widget_window(
         _ => "Widget",
     };
 
-    let hash_path = format!("/#/widget/{}?id={}", params.widget_type, id);
+    // Use a hash-based route so the SPA can render the widget directly; in dev this
+    // automatically points at the Vite dev server via tauri.conf.json `devUrl`.
+    let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
+    println!("OPENING WIDGET label={} hash={}", label, hash_path);
 
-    #[cfg(debug_assertions)]
-    let url = format!("http://127.0.0.1:1420{}", hash_path);
+    let builder = tauri::WebviewWindowBuilder::new(
+        &app,
+        &label,
+        tauri::WebviewUrl::App(hash_path.into()),
+    );
 
-    #[cfg(not(debug_assertions))]
-    let url = hash_path.clone();
-
-    println!("OPENING WIDGET label={} url={}", label, url);
-
-    let mut builder = if cfg!(debug_assertions) {
-        let parsed = tauri::Url::parse(&url).map_err(|e| format!("URL parse error: {}", e))?;
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(parsed))
-            .initialization_script(&format!(
-                "window.location.hash='{}'; window.location.href='{}';",
-                hash_path, url
-            ))
-    } else {
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(hash_path.into()))
-    };
-
-    let window = builder
+    let _window = builder
         .title(window_title)
         .inner_size(width, height)
         .position(x, y)
