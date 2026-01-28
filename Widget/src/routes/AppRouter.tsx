@@ -75,7 +75,11 @@ function AppRouter() {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("Route changed to:", location.pathname, location.hash);
+    console.log("AppRouter - Route changed:");
+    console.log("  pathname:", location.pathname);
+    console.log("  hash:", location.hash);
+    console.log("  search:", location.search);
+    console.log("  full location:", location);
   }, [location]);
 
   return (

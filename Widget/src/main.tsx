@@ -5,6 +5,8 @@ import App from "./App";
 import DevRuntimeOverlay from "./components/DevRuntimeOverlay";
 
 console.log("main.tsx loaded");
+console.log("window.location:", window.location.href);
+console.log("window.location.hash:", window.location.hash);
 const rootElement = document.getElementById("root");
 console.log("Root element:", rootElement);
 
