@@ -45,18 +45,15 @@ fn open_widget_window(
 
     let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
     
-    println!("OPENING WIDGET label={} hash={}", label, hash_path);
-
     let builder = if cfg!(debug_assertions) {
-        // Dev mode: load base URL and navigate to hash via script
-        let url = tauri::Url::parse("http://localhost:1420/").map_err(|e| format!("URL parse error: {}", e))?;
+        // Dev mode: load from dev server with hash in URL
+        let url_str = format!("http://localhost:1420/{}", hash_path);
+        println!("OPENING WIDGET label={} url={}", label, url_str);
+        let url = tauri::Url::parse(&url_str).map_err(|e| format!("URL parse error: {}", e))?;
         tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
-            .initialization_script(&format!(
-                "console.log('Widget init script running'); window.location.hash = '{}'; console.log('Hash set to:', window.location.hash);",
-                hash_path
-            ))
     } else {
         // Prod mode: load index.html and set hash via script
+        println!("OPENING WIDGET label={} hash={}", label, hash_path);
         tauri::WebviewWindowBuilder::new(
             &app,
             &label,
