@@ -45,18 +45,16 @@ fn open_widget_window(
 
     let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
     
-    #[cfg(debug_assertions)]
-    let url_str = format!("http://localhost:1420/{}", hash_path);
-    
-    #[cfg(not(debug_assertions))]
-    let url_str = format!("index.html{}", hash_path);
-    
-    println!("OPENING WIDGET label={} url={}", label, url_str);
+    println!("OPENING WIDGET label={} hash={}", label, hash_path);
 
     let builder = if cfg!(debug_assertions) {
-        // Dev mode: load from Vite dev server with hash route
-        let url = tauri::Url::parse(&url_str).map_err(|e| format!("URL parse error: {}", e))?;
+        // Dev mode: load base URL and navigate to hash via script
+        let url = tauri::Url::parse("http://localhost:1420/").map_err(|e| format!("URL parse error: {}", e))?;
         tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
+            .initialization_script(&format!(
+                "console.log('Widget init script running'); window.location.hash = '{}'; console.log('Hash set to:', window.location.hash);",
+                hash_path
+            ))
     } else {
         // Prod mode: load index.html and set hash via script
         tauri::WebviewWindowBuilder::new(
@@ -79,6 +77,13 @@ fn open_widget_window(
         .skip_taskbar(true)
         .build()
         .map_err(|e| e.to_string())?;
+    
+    #[cfg(debug_assertions)]
+    {
+        if let Some(window) = app.get_webview_window(&label) {
+            window.open_devtools();
+        }
+    }
 
     Ok(())
 }
