@@ -44,28 +44,27 @@ fn open_widget_window(
     };
 
     let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
-    
-    let builder = if cfg!(debug_assertions) {
-        // Dev mode: load from dev server with hash in URL
-        let url_str = format!("http://localhost:1420/{}", hash_path);
-        println!("OPENING WIDGET label={} url={}", label, url_str);
-        let url = tauri::Url::parse(&url_str).map_err(|e| format!("URL parse error: {}", e))?;
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
-    } else {
-        // Prod mode: load index.html and set hash via script
-        println!("OPENING WIDGET label={} hash={}", label, hash_path);
-        tauri::WebviewWindowBuilder::new(
-            &app,
-            &label,
-            tauri::WebviewUrl::App("index.html".into()),
-        )
-        .initialization_script(&format!(
-            "window.location.hash = '{}';",
-            hash_path
-        ))
-    };
+    println!("OPENING WIDGET label={} hash={}", label, hash_path);
 
-    let _window = builder
+    // Always load index.html so Tauri maps to devUrl in dev and to bundled assets in prod.
+    let builder = tauri::WebviewWindowBuilder::new(
+        &app,
+        &label,
+        tauri::WebviewUrl::App("index.html".into()),
+    )
+    .initialization_script(&format!(
+        "window.__WIDGET_HASH='{}';\
+        console.log('Widget init script running');\
+        window.addEventListener('DOMContentLoaded', () => {{\
+          if (window.location.hash !== window.__WIDGET_HASH) {{\
+            window.location.hash = window.__WIDGET_HASH;\
+          }}\
+          console.log('Hash after set:', window.location.hash);\
+        }});",
+        hash_path
+    ));
+
+    let window = builder
         .title(window_title)
         .inner_size(width, height)
         .position(x, y)
@@ -74,12 +73,11 @@ fn open_widget_window(
         .skip_taskbar(true)
         .build()
         .map_err(|e| e.to_string())?;
-    
+
     #[cfg(debug_assertions)]
     {
-        if let Some(window) = app.get_webview_window(&label) {
-            window.open_devtools();
-        }
+        window.open_devtools();
+        window.set_focus().ok();
     }
 
     Ok(())
