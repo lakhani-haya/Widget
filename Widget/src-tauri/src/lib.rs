@@ -78,6 +78,14 @@ fn open_widget_window(
     {
         window.open_devtools();
         window.set_focus().ok();
+        if let Err(err) = window.eval(
+            "document.body.insertAdjacentHTML('beforeend', "
+            "'<div style=\"position:fixed;top:6px;left:6px;z-index:999999;" 
+            "background:#f00;color:#fff;padding:4px 6px;font:12px monospace;" 
+            "border:1px solid #fff;\">WIDGET BOOT</div>');",
+        ) {
+            println!("window.eval error: {}", err);
+        }
     }
 
     Ok(())
