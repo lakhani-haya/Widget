@@ -62,7 +62,16 @@ fn open_widget_window(
           console.log('Hash after set:', window.location.hash);\
         }});",
         hash_path
-    ));
+    ))
+    .on_page_load(|window, _| {
+        #[cfg(debug_assertions)]
+        {
+            window.open_devtools();
+            let _ = window.eval(
+                r#"document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;top:6px;left:6px;z-index:999999;background:#f00;color:#fff;padding:4px 6px;font:12px monospace;border:1px solid #fff;">WIDGET BOOT</div>');"#,
+            );
+        }
+    });
 
     let window = builder
         .title(window_title)
@@ -76,16 +85,7 @@ fn open_widget_window(
 
     #[cfg(debug_assertions)]
     {
-        window.open_devtools();
         window.set_focus().ok();
-        if let Err(err) = window.eval(
-            "document.body.insertAdjacentHTML('beforeend', "
-            "'<div style=\"position:fixed;top:6px;left:6px;z-index:999999;" 
-            "background:#f00;color:#fff;padding:4px 6px;font:12px monospace;" 
-            "border:1px solid #fff;\">WIDGET BOOT</div>');",
-        ) {
-            println!("window.eval error: {}", err);
-        }
     }
 
     Ok(())
