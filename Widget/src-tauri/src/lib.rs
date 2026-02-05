@@ -1,6 +1,8 @@
 use tauri::Manager;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
+use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::Engine as _;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -46,23 +48,40 @@ fn open_widget_window(
     let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
     println!("OPENING WIDGET label={} hash={}", label, hash_path);
 
-    // Always load index.html so Tauri maps to devUrl in dev and to bundled assets in prod.
-    let builder = tauri::WebviewWindowBuilder::new(
-        &app,
-        &label,
-        tauri::WebviewUrl::App("index.html".into()),
-    )
-    .initialization_script(&format!(
-        "window.__WIDGET_HASH='{}';\
-        console.log('Widget init script running');\
-        window.addEventListener('DOMContentLoaded', () => {{\
-          if (window.location.hash !== window.__WIDGET_HASH) {{\
-            window.location.hash = window.__WIDGET_HASH;\
-          }}\
-          console.log('Hash after set:', window.location.hash);\
-        }});",
-        hash_path
-    ))
+    let builder = if cfg!(debug_assertions) {
+        // Debug bootstrap: show a visible page and then navigate to the dev server route.
+        let bootstrap_html = format!(
+            r#"<!doctype html><html><head><meta charset="utf-8" /></head>
+            <body style="margin:0;font-family:monospace;background:#111;color:#0f0;">
+            <div style="padding:12px;">BOOTSTRAP: navigating to dev server...</div>
+            <script>
+              setTimeout(() => {{
+                location.href = 'http://localhost:1420/{}';
+              }}, 50);
+            </script>
+            </body></html>"#,
+            hash_path
+        );
+        let data_url = format!("data:text/html;base64,{}", BASE64.encode(bootstrap_html.as_bytes()));
+        let url = tauri::Url::parse(&data_url).map_err(|e| format!("URL parse error: {}", e))?;
+        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
+    } else {
+        // Prod: load index.html and set hash via script.
+        tauri::WebviewWindowBuilder::new(
+            &app,
+            &label,
+            tauri::WebviewUrl::App("index.html".into()),
+        )
+        .initialization_script(&format!(
+            "window.__WIDGET_HASH='{}';\
+            window.addEventListener('DOMContentLoaded', () => {{\
+              if (window.location.hash !== window.__WIDGET_HASH) {{\
+                window.location.hash = window.__WIDGET_HASH;\
+              }}\
+            }});",
+            hash_path
+        ))
+    }
     .on_page_load(|window, _| {
         #[cfg(debug_assertions)]
         {
