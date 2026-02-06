@@ -47,36 +47,28 @@ fn open_widget_window(
 
     let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
     
-    let (url_to_load, init_script) = if cfg!(debug_assertions) {
-        // Dev: load from dev server directly with hash in URL
-        let url_str = format!("http://localhost:1420/{}", hash_path);
-        println!("OPENING WIDGET label={} url={}", label, url_str);
-        (url_str, None)
+    let builder = if cfg!(debug_assertions) {
+        // Dev: load base dev server URL and navigate to hash via script
+        println!("OPENING WIDGET label={} hash={}", label, hash_path);
+        let url = tauri::Url::parse("http://localhost:1420/").map_err(|e| format!("URL parse error: {}", e))?;
+        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
+            .initialization_script(&format!(
+                "setTimeout(() => {{ window.location.hash = '{}'; console.log('Hash set:', window.location.hash); }}, 100);",
+                hash_path
+            ))
     } else {
         // Prod: load index.html and set hash via script
         println!("OPENING WIDGET label={} hash={}", label, hash_path);
-        let script = format!(
-            "window.addEventListener('DOMContentLoaded', () => {{ window.location.hash = '{}'; }});",
-            hash_path
-        );
-        ("index.html".to_string(), Some(script))
-    };
-
-    let url = tauri::Url::parse(&url_to_load).map_err(|e| format!("URL parse error: {}", e))?;
-    
-    let mut builder = if cfg!(debug_assertions) {
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
-    } else {
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App(url_to_load.into()))
-    };
-    
-    if let Some(script) = init_script {
-        builder = builder.initialization_script(&script);
+        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
+            .initialization_script(&format!(
+                "window.addEventListener('DOMContentLoaded', () => {{ window.location.hash = '{}'; }});",
+                hash_path
+            ))
     }
-    
-    let builder = builder.on_page_load(|window, _| {
+    .on_page_load(|window, _| {
         #[cfg(debug_assertions)]
         {
+            println!("on_page_load triggered!");
             window.open_devtools();
             let _ = window.eval(
                 r#"document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;top:6px;left:6px;z-index:999999;background:#f00;color:#fff;padding:4px 6px;font:12px monospace;border:1px solid #fff;">WIDGET BOOT</div>');"#,
