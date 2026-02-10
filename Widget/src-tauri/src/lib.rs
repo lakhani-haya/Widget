@@ -80,6 +80,10 @@ fn open_widget_window(
     #[cfg(debug_assertions)]
     {
         window.set_focus().ok();
+        match window.eval("document.body.innerHTML = '<div style=\\"font:14px monospace;color:#fff;background:#222;padding:8px;\\">EVAL OK</div>';") {
+            Ok(_) => println!("eval after build: OK"),
+            Err(err) => println!("eval after build: ERR {}", err),
+        }
     }
 
     Ok(())
