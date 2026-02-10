@@ -1,8 +1,6 @@
 use tauri::Manager;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::Engine as _;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
