@@ -45,24 +45,17 @@ fn open_widget_window(
 
     let hash_path = format!("#/widget/{}?id={}", params.widget_type, id);
     
-    let builder = if cfg!(debug_assertions) {
-        // Dev: load base dev server URL and navigate to hash via script
-        println!("OPENING WIDGET label={} hash={}", label, hash_path);
-        let url = tauri::Url::parse("http://localhost:1420/").map_err(|e| format!("URL parse error: {}", e))?;
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(url))
-            .initialization_script(&format!(
-                "setTimeout(() => {{ window.location.hash = '{}'; console.log('Hash set:', window.location.hash); }}, 100);",
-                hash_path
-            ))
-    } else {
-        // Prod: load index.html and set hash via script
-        println!("OPENING WIDGET label={} hash={}", label, hash_path);
-        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
-            .initialization_script(&format!(
-                "window.addEventListener('DOMContentLoaded', () => {{ window.location.hash = '{}'; }});",
-                hash_path
-            ))
-    }
+    // Use app protocol for both dev and prod; dev will resolve via devUrl automatically.
+    println!("OPENING WIDGET label={} hash={}", label, hash_path);
+    let builder = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
+        .initialization_script(&format!(
+            "window.addEventListener('DOMContentLoaded', () => {{\
+               if (window.location.hash !== '{}') {{\
+                 window.location.hash = '{}';\
+               }}\
+             }});",
+            hash_path, hash_path
+        ))
     .on_page_load(|window, _| {
         #[cfg(debug_assertions)]
         {
