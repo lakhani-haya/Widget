@@ -77,7 +77,11 @@ fn open_widget_window(
         .resizable(true)
         .skip_taskbar(true)
         .build()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            println!("WIDGET BUILD ERROR: {}", e);
+            e.to_string()
+        })?;
+    println!("WIDGET WINDOW BUILT: {}", label);
 
     #[cfg(debug_assertions)]
     {
