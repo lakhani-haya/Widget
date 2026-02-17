@@ -48,11 +48,11 @@ fn open_widget_window(
     // Use app protocol for both dev and prod; dev will resolve via devUrl automatically.
     println!("OPENING WIDGET label={} hash={}", label, hash_path);
         let init_script = format!(
-                r#"window.addEventListener('DOMContentLoaded', () => {
-    if (window.location.hash !== "{hash}") {
+                r#"window.addEventListener('DOMContentLoaded', () => {{
+    if (window.location.hash !== "{hash}") {{
         window.location.hash = "{hash}";
-    }
-});"#,
+    }}
+}});"#,
                 hash = hash_path
         );
 
