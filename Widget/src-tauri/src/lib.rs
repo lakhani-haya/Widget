@@ -47,15 +47,17 @@ fn open_widget_window(
     
     // Use app protocol for both dev and prod; dev will resolve via devUrl automatically.
     println!("OPENING WIDGET label={} hash={}", label, hash_path);
-    let builder = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
-        .initialization_script(&format!(
-            "window.addEventListener('DOMContentLoaded', () => {{\
-               if (window.location.hash !== '{}') {{\
-                 window.location.hash = '{}';\
-               }}\
-             }});",
-            hash_path, hash_path
-        ))
+        let init_script = format!(
+                r#"window.addEventListener('DOMContentLoaded', () => {
+    if (window.location.hash !== "{hash}") {
+        window.location.hash = "{hash}";
+    }
+});"#,
+                hash = hash_path
+        );
+
+        let builder = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
+                .initialization_script(&init_script)
     .on_page_load(|window, _| {
         #[cfg(debug_assertions)]
         {
@@ -80,7 +82,9 @@ fn open_widget_window(
     #[cfg(debug_assertions)]
     {
         window.set_focus().ok();
-        match window.eval("document.body.innerHTML = '<div style=\\"font:14px monospace;color:#fff;background:#222;padding:8px;\\">EVAL OK</div>';") {
+        match window.eval(
+            r#"document.body.innerHTML = '<div style="font:14px monospace;color:#fff;background:#222;padding:8px;">EVAL OK</div>';"#,
+        ) {
             Ok(_) => println!("eval after build: OK"),
             Err(err) => println!("eval after build: ERR {}", err),
         }
